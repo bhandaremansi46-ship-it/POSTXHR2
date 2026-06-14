@@ -224,6 +224,7 @@ function onupdate(){
         snackbar(err,'error')
        }
     }
+    inputform.reset()
     spinner.classList.add('d-none')
     
 }
@@ -261,11 +262,11 @@ function onremove(ele){
     }
 
 
-    spinner.classList.add('d-none')
+  
     
   }
 });
-
+  spinner.classList.add('d-none')
 }
 
 
