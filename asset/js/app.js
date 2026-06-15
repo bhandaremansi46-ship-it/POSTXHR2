@@ -57,7 +57,7 @@ function createposts(arr){
 							<p>${ele.body}</p>
 						</div>
 						<div class="card-footer d-flex justify-content-between">
-							<button class="btn btn-primary btn-sm " id="editbtn" onclick='onedit(this)'>Edit</button>
+							<button class="btn btn-primary btn-sm " id="editbtn" onclick='Onedit(this)'>Edit</button>
 							<button class="btn btn-danger btn-sm " id="deletebtn" onclick='onremove(this)' >Remove</button>
 
 						</div>
@@ -108,6 +108,13 @@ function onsubmit(ele){
 
 
 function addnewcard(newobj,response){
+    let postObj = {
+        ...newobj,
+        id: response.id
+    };
+
+    postArr.unshift(postObj);
+    
     let div = document.createElement('div')
     div.className = 'col-md-3 my-4'
     div.id = response.id
@@ -121,7 +128,7 @@ function addnewcard(newobj,response){
 							<p>${newobj.body}</p>
 						</div>
 						<div class="card-footer d-flex justify-content-between">
-							<button class="btn btn-primary btn-sm " id="editbtn" onclick='onedit(this)'>Edit</button>
+							<button class="btn btn-primary btn-sm " id="editbtn" onclick='Onedit(this)'>Edit</button>
 							<button class="btn btn-danger btn-sm " id="deletebtn" onclick='onremove(this)' >Remove</button>
 
 						</div>
@@ -141,57 +148,61 @@ function addnewcard(newobj,response){
 }
 
 
-function onedit(ele){
-    spinner.classList.remove('d-none')
-    
-    let editId = ele.closest('.col-md-3').id
-    localStorage.setItem('EditId',editId)
-    let Post_url = `${Base_url}/posts/${editId}`
+function Onedit(ele){
+     let EDIT_ID = Number(ele.closest('.col-md-3').id);
 
-    let xhr = new XMLHttpRequest()
+    localStorage.setItem('EDIT_ID', EDIT_ID);
 
-    xhr.open('GET',Post_url)
+    let EDIT_OBJ = postArr.find(post => post.id == EDIT_ID);
 
-    xhr.send(null)
+    if(EDIT_OBJ){
 
-    xhr.onload = function(){
-       if(xhr.status >=200 && xhr.status <=299){
-        let EditObj = JSON.parse(xhr.response)
+        title.value = EDIT_OBJ.title;
+        body.value = EDIT_OBJ.body;
+        userId.value = EDIT_OBJ.userId;
 
-        title.value = EditObj.title
-        body.value = EditObj.body
-        userId.value = EditObj.userId
-
-
-        addpost.classList.add('d-none')
-        updatepost.classList.remove('d-none')
-
-       }else{
-
-        let err = xhr.response
-
-        snackbar(err,'error')
-
-       }
-
-
+        addpost.classList.add('d-none');
+        updatepost.classList.remove('d-none');
     }
-
-    spinner.classList.add('d-none')
-    
 
 }
 
 
 function onupdate(){
-    let updateId = localStorage.getItem('EditId')
+    let updateId = localStorage.getItem('EDIT_ID')
     spinner.classList.remove('d-none')
 
     let updateObj ={
         title : title.value,
         body : body.value,
         userId : userId.value,
-        id : userId
+        id : updateId
+    }
+    let index = postArr.findIndex(post => post.id == updateId);
+
+         if(index !== -1){
+    postArr[index] = updateObj;
+          }
+          if (updateId > 100) {
+
+        let div = document.getElementById(updateId);
+
+        div.querySelector('.card-header h2').innerText = updateObj.title;
+        div.querySelector('.card-body p').innerText = updateObj.body;
+
+        snackbar(
+            `The Post id ${updateId} is Updated successfully!!`,
+            'success'
+        );
+
+        inputform.reset();
+
+        addpost.classList.remove('d-none');
+        updatepost.classList.add('d-none');
+
+        spinner.classList.add('d-none');
+
+        return;
     }
 
     let PUT_url = `${Base_url}/posts/${updateId}`
@@ -199,8 +210,9 @@ function onupdate(){
 
     xhr.open('PUT',PUT_url)
 
-    xhr.send(updateObj)
+    xhr.setRequestHeader('Content-Type', 'application/json')
 
+    xhr.send(JSON.stringify(updateObj))
     xhr.onload = function(){
        if(xhr.status >= 200 && xhr.status <= 299){
          
